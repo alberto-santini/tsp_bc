@@ -8,11 +8,22 @@ instdir = File.join(tspbdir, 'instances')
 libsdir = "#{File.join(homedir, 'local', 'lib')}:#{File.join(homedir, 'local', 'lib64')}"
 enum_k = ARGV[0].to_i
 
+instances = ['gr17', 'gr21', 'gr24', 'fri26', 'bayg29', 'dantzig42', 'att48',
+  'hk48', 'gr48', 'eil51', 'berlin52', 'brazil58', 'st70', 'pr76',
+  'eil76', 'rat99', 'kroE100', 'kroD100', 'kroC100', 'kroB100',
+  'kroA100', 'rd100', 'eil101', 'lin105', 'pr107', 'gr120', 'pr124',
+  'bier127', 'ch130', 'pr136', 'pr144', 'kroB150', 'ch150',
+  'kroA150', 'pr152', 'u159', 'brg180', 'rat195', 'd198', 'kroA200',
+  'kroB200', 'ts225', 'tsp225', 'pr226', 'gil262', 'pr264', 'a280',
+  'lin318', 'rd400', 'p654']
+
 FileUtils.mkdir_p('cluster-scripts')
 
 puts "Generating launchers for instance in #{instdir}..."
 
 Dir.glob(File.join(instdir, '*.tsp')) do |instance|
+  next unless instances.any?{|allowed| allowed.include? instance}
+
   inst_name = File.basename(instance, File.extname(instance))
   out_file = "#{enum_k}-#{inst_name}.csv"
 
