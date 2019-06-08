@@ -22,7 +22,7 @@ FileUtils.mkdir_p('cluster-scripts')
 puts "Generating launchers for instance in #{instdir}..."
 
 Dir.glob(File.join(instdir, '*.tsp')) do |instance|
-  next unless instances.any?{|allowed| allowed.include? instance}
+  next unless instances.any?{|allowed| instance.include? allowed}
 
   inst_name = File.basename(instance, File.extname(instance))
   out_file = "#{enum_k}-#{inst_name}.csv"
