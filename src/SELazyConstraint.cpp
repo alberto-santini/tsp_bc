@@ -71,16 +71,6 @@ namespace tsp_bc {
             auto residual_capacity = std::vector<float>(m, 0.0f);
             auto colour = std::vector<int>(n, 0);
 
-            std::ofstream of{"graph.txt"};
-            of << n << "\n";
-            of << source << " " << sink << "\n";
-            for(auto i = 0u; i < n; ++i) {
-                for(auto j = i + 1u; j < n; ++j) {
-                    of << i << " " << j << " " << std::abs(getValue(x[i][j])) << "\n";
-                }
-            }
-            of.close();
-
             const auto flow = boost::boykov_kolmogorov_max_flow(
                     sp_graph,
                     boost::make_iterator_property_map(capacity.begin(), boost::get(&SPEdgeProperty::id, sp_graph)),
