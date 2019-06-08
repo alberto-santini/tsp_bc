@@ -131,6 +131,7 @@ namespace tsp_bc {
 
         return {
             num_rows,
+            n,
             model_creation_time,
             root_node_time,
             solver_time,

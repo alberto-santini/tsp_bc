@@ -18,6 +18,7 @@
 namespace tsp_bc {
     struct Solution {
         long num_rows;
+        std::size_t instance_size;
         double model_creation_time_sec;
         double root_node_time_sec;
         double solver_time_sec;

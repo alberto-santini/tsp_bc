@@ -21,6 +21,7 @@ int main(int, char** argv) {
 
     std::cout << argv[1] << ","
               << subtour_enumeration_k << ","
+              << solution.instance_size << ","
               << solution.num_rows << ","
               << solution.model_creation_time_sec << ","
               << solution.root_node_time_sec << ","
