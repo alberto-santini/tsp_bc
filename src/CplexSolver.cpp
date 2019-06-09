@@ -96,11 +96,12 @@ namespace tsp_bc {
         }
 
         const auto model_creation_end_time = high_resolution_clock::now();
+        const auto model_creation_time = duration_cast<duration<double>>(model_creation_end_time - start_time).count();
 
         IloCplex cplex{model};
         cplex.use(IloCplex::Callback(new(env) SEUserCut{env, x, graph}));
         cplex.use(IloCplex::Callback(new(env) SELazyConstraint{env, x, graph}));
-        cplex.setParam(IloCplex::TiLim, 3600);
+        cplex.setParam(IloCplex::TiLim, 3600 - model_creation_time);
         cplex.setParam(IloCplex::NodeLim, 0);
 
         const auto num_rows = cplex.getNrows();
@@ -149,7 +150,6 @@ namespace tsp_bc {
             std::cerr << "Cplex exception when retrieving the final objective value/gap:\n" << e << "\n";
         }
 
-        const auto model_creation_time = duration_cast<duration<double>>(model_creation_end_time - start_time).count();
         const auto root_node_time = duration_cast<duration<double>>(root_node_end_time - model_creation_end_time).count();
         const auto solver_time = duration_cast<duration<double>>(solver_end_time - model_creation_end_time).count();
 
