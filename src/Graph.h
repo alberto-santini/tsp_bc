@@ -6,6 +6,7 @@
 #define TSP_BC_GRAPH_H
 
 #include <boost/graph/adjacency_list.hpp>
+#include <vector>
 
 namespace tsp_bc {
     using Graph = boost::adjacency_list<
@@ -16,6 +17,8 @@ namespace tsp_bc {
             float>;                 // Edge property (cost)
     using Vertex = Graph::vertex_descriptor;
     using Edge = Graph::edge_descriptor;
+
+    std::vector<Vertex> initial_greedy(const Graph& g);
 }
 
 #endif //TSP_BC_GRAPH_H

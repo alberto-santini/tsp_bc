@@ -9,7 +9,8 @@ add_executable(tsp_bc   src/main.cpp
                         src/SELazyConstraint.h
                         src/SEUserCut.cpp
                         src/SEUserCut.h
-                        src/Graph.h)
+                        src/Graph.h
+                        src/Graph.cpp)
 
 set(WARNING_OPTIONS             -Wall -Wextra -Werror)
 set(GCC_WARNING_OPTIONS         -Wduplicated-cond -Wlogical-op -Wuseless-cast -Wrestrict)

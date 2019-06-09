@@ -104,6 +104,8 @@ namespace tsp_bc {
         cplex.setParam(IloCplex::TiLim, 3600 - model_creation_time);
         cplex.setParam(IloCplex::NodeLim, 0);
 
+        add_initial_solution(env, cplex, x);
+
         const auto num_rows = cplex.getNrows();
 
         try {
@@ -193,5 +195,27 @@ namespace tsp_bc {
 
         auto indicator = std::vector<bool>(n, false);
         visit_fixed_size_subsets(n, k, 0u, 0u, indicator, add_cut);
+    }
+
+    void CplexSolver::add_initial_solution(IloEnv& env, IloCplex& cplex, IloArray<IloNumVarArray>& x) const {
+        const auto initial = initial_greedy(graph);
+        IloNumVarArray ivars{env};
+        IloNumArray ivals{env};
+
+        for(auto i = 0u; i < initial.size() - 1u; ++i) {
+            const auto s = std::min(initial[i], initial[i + 1u]);
+            const auto t = std::max(initial[i], initial[i + 1u]);
+
+            assert(s != t);
+
+            ivars.add(x[s][t]);
+            ivals.add(1);
+        }
+
+        // Close the tour.
+        ivars.add(x[initial.front()][initial.back()]);
+        ivals.add(1);
+
+        cplex.addMIPStart(ivars, ivals);
     }
 }

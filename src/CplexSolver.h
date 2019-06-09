@@ -32,6 +32,7 @@ namespace tsp_bc {
         Graph graph;
 
         void add_subtour_enumeration(IloEnv& env, IloModel& model, IloArray<IloNumVarArray>& x, std::size_t k) const;
+        void add_initial_solution(IloEnv& env, IloCplex& cplex, IloArray<IloNumVarArray>& x) const;
 
     public:
         explicit CplexSolver(std::string instance_file);
