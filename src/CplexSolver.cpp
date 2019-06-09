@@ -55,12 +55,12 @@ namespace tsp_bc {
         const auto start_time = high_resolution_clock::now();
 
         for(auto i = 0u; i < n; ++i) {
-            // x[i] = IloNumVarArray{env, cpx_n, 0, 1, IloNumVar::Bool};
+            x[i] = IloNumVarArray{env, cpx_n, 0, 1, IloNumVar::Bool};
 
-            x[i] = IloNumVarArray{env, cpx_n};
-            for(auto j = i + 1u; j < n; ++j) {
-                x[i][j] = IloNumVar{env, 0, 1, IloNumVar::Bool, ("x_" + std::to_string(i) + "_" + std::to_string(j)).c_str()};
-            }
+            // x[i] = IloNumVarArray{env, cpx_n};
+            // for(auto j = i + 1u; j < n; ++j) {
+            //     x[i][j] = IloNumVar{env, 0, 1, IloNumVar::Bool, ("x_" + std::to_string(i) + "_" + std::to_string(j)).c_str()};
+            // }
         }
 
         // Incidence constraints
@@ -105,25 +105,49 @@ namespace tsp_bc {
 
         const auto num_rows = cplex.getNrows();
 
-        cplex.solve();
+        try {
+            cplex.solve();
+        } catch(const IloException& e) {
+            std::cerr << "Cplex exception when solving the root node:\n" << e << "\n";
+            throw;
+        }
 
         const auto root_node_end_time = high_resolution_clock::now();
         auto root_node_gap = 1.0;
 
         try {
             root_node_gap = cplex.getMIPRelativeGap();
-        } catch(const IloException&) {
+        } catch(const IloException& e) {
             // Throws if no integer solution was found.
+            // In this case we arbitrarily set the root gap as 100%.
+            std::cerr << "Cplex exception when retrieving the root node gap:\n" << e << "\n";
         }
 
         if(root_node_gap > 0.0) {
             cplex.setParam(IloCplex::NodeLim, 999999);
-            cplex.solve();
+
+            try {
+                cplex.solve();
+            } catch(const IloException& e) {
+                std::cerr << "Cplex exception when solving after the root node:\n" << e << "\n";
+                throw;
+            }
         }
 
         const auto solver_end_time = high_resolution_clock::now();
-        const auto obj_value = cplex.getObjValue();
-        const auto gap = cplex.getMIPRelativeGap();
+
+        auto obj_value = 999999.0;
+        auto gap = 1.0;
+
+        try {
+            obj_value = cplex.getObjValue();
+            gap = cplex.getMIPRelativeGap();
+        } catch(const IloException& e) {
+            // Throws if no integer solution was found.
+            // In this case we arbitrarily set the gap as 100%,
+            // and the objective value as 999999.
+            std::cerr << "Cplex exception when retrieving the final objective value/gap:\n" << e << "\n";
+        }
 
         const auto model_creation_time = duration_cast<duration<double>>(model_creation_end_time - start_time).count();
         const auto root_node_time = duration_cast<duration<double>>(root_node_end_time - model_creation_end_time).count();
@@ -157,7 +181,13 @@ namespace tsp_bc {
                 }
             }
 
-            model.add(expr <= static_cast<IloInt>(k) - 1);
+            try {
+                model.add(expr <= static_cast<IloInt>(k) - 1);
+            } catch(const IloException& e) {
+                std::cerr << "Cplex exception when adding cut lhs " << expr << "\n";
+                std::cerr << "Exception: " << e << "\n";
+            }
+
             expr.end();
         };
 
