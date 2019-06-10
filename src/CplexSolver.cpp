@@ -215,8 +215,7 @@ namespace tsp_bc {
         IloNumArray ivals{env};
 
         for(auto i = 0u; i < initial.size() - 1u; ++i) {
-            const auto s = std::min(initial[i], initial[i + 1u]);
-            const auto t = std::max(initial[i], initial[i + 1u]);
+            const auto& [s, t] = std::minmax(initial[i], initial[i + 1u]);
 
             assert(s != t);
 
