@@ -31,7 +31,9 @@ namespace tsp_bc {
         }
     }
 
-    CplexSolver::CplexSolver(std::string instance_file) : instance{instance_file} {
+    CplexSolver::CplexSolver(std::string instance_file, std::size_t k, bool use_proximity, std::size_t proximity_n) :
+        instance{instance_file}, k{k}, use_proximity{use_proximity}, proximity_n{proximity_n}
+    {
         graph = Graph(instance.number_of_vertices());
 
         for(auto i = 0u; i < instance.number_of_vertices(); ++i) {
@@ -39,9 +41,13 @@ namespace tsp_bc {
                 boost::add_edge(i, j, instance.get_distance(i, j), graph);
             }
         }
+
+        if(use_proximity) {
+            make_proximity();
+        }
     }
 
-    Solution CplexSolver::solve(std::size_t subtour_enumeration_k) const {
+    Solution CplexSolver::solve() const {
         using namespace std::chrono;
 
         const auto n = instance.number_of_vertices();
@@ -91,8 +97,8 @@ namespace tsp_bc {
         model.add(IloObjective{env, expr, IloObjective::Minimize});
         expr.end();
 
-        if(subtour_enumeration_k > 2u) {
-            add_subtour_enumeration(env, model, x, subtour_enumeration_k);
+        if(k > 2u) {
+            add_subtour_enumeration(env, model, x);
         }
 
         const auto model_creation_end_time = high_resolution_clock::now();
@@ -167,10 +173,14 @@ namespace tsp_bc {
         };
     }
 
-    void CplexSolver::add_subtour_enumeration(IloEnv& env, IloModel& model, IloArray<IloNumVarArray>& x, std::size_t k) const {
+    void CplexSolver::add_subtour_enumeration(IloEnv& env, IloModel& model, IloArray<IloNumVarArray>& x) const {
         const auto n = this->instance.number_of_vertices();
 
-        auto add_cut = [&env, &model, &x, k, n] (const std::vector<bool>& indicator) -> void {
+        auto add_cut = [this, &env, &model, &x, n] (const std::vector<bool>& indicator) -> void {
+            if(use_proximity && !is_indicator_proximal(indicator)) {
+                return;
+            }
+
             IloExpr expr{env};
 
             for(auto i = 0u; i < n; ++i) {
@@ -217,5 +227,66 @@ namespace tsp_bc {
         ivals.add(1);
 
         cplex.addMIPStart(ivars, ivals);
+    }
+
+    void CplexSolver::make_proximity() {
+        const auto n = instance.number_of_vertices();
+        assert(proximity_n < n);
+        assert(use_proximity);
+
+        proximity = std::vector<std::vector<bool>>(n, std::vector<bool>(n, false));
+
+        for(auto i = 0u; i < n; ++i) {
+            std::vector<Vertex> other_vs;
+            other_vs.reserve(n - 1u);
+
+            for(auto j = 0u; j < n; ++j) {
+                if(j != i) {
+                    other_vs.push_back(j);
+                }
+            }
+
+            std::sort(other_vs.begin(), other_vs.end(),
+                    [&] (const Vertex& v1, const Vertex& v2) -> bool {
+                        return instance.get_distance(i, v1) < instance.get_distance(i, v2);
+                    }
+            );
+
+            for(auto j = 0u; j < proximity_n; ++j) {
+                proximity[i][j] = true;
+            }
+        }
+    }
+
+    bool CplexSolver::is_indicator_proximal(const std::vector<bool>& indicator) const {
+        const auto n = instance.number_of_vertices();
+
+        assert(indicator.size() == n);
+        assert(use_proximity);
+
+        for(auto i = 0u; i < n; ++i) {
+            if(!indicator[i]) {
+                continue;
+            }
+
+            bool at_least_one_proximal = false;
+
+            for(auto j = 0u; j < n; ++j) {
+                if(!indicator[j] || i == j) {
+                    continue;
+                }
+
+                if(proximity[i][j]) {
+                    at_least_one_proximal = true;
+                    break;
+                }
+            }
+
+            if(!at_least_one_proximal) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

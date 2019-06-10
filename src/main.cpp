@@ -22,16 +22,33 @@ int main(int, char** argv) {
 
     std::size_t subtour_enumeration_k;
     if(!(ss >> subtour_enumeration_k)) {
-        std::cerr << "Wrong parameter for k!\n";
+        std::cerr << "Wrong parameter for k: " << argv[2]<< "!\n";
         return 1;
     }
 
-    // --- 3rd parameter: output file ---
-    auto ofs = std::ofstream{argv[3]};
+    // --- 4th parameter: proximity n ---
+    ss.str(""); ss.clear();
+    ss << argv[3];
+
+    std::size_t proximity_n;
+    if(!(ss >> proximity_n)) {
+        std::cerr << "Wrong parameter for proximity n: " << argv[3] << "\n";
+        return 1;
+    }
+    const auto use_proximity = (proximity_n > 0u);
+
+    // --- 5th parameter: output file ---
+    auto ofs = std::ofstream{argv[4]};
 
     // --- Solve! ---
-    const auto solver = CplexSolver{inst};
-    const auto solution = solver.solve(subtour_enumeration_k);
+    const auto solver = CplexSolverFactory{}
+        .with_instance(inst)
+        .with_proximity(use_proximity)
+        .with_proximity_n(proximity_n)
+        .with_enumeration_k(subtour_enumeration_k)
+        .get();
+
+    const auto solution = solver.solve();
 
     // --- Print output ---
     ofs << inst.stem().string() << ","

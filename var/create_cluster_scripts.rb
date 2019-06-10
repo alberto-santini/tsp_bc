@@ -7,6 +7,7 @@ execdir = File.join(tspbdir, 'build')
 instdir = File.join(tspbdir, 'instances')
 libsdir = "#{File.join(homedir, 'local', 'lib')}:#{File.join(homedir, 'local', 'lib64')}"
 enum_k = ARGV[0].to_i
+proximity_n = ARGV[1].to_i
 
 instances = ['gr17', 'gr21', 'gr24', 'fri26', 'bayg29', 'dantzig42', 'att48',
   'hk48', 'gr48', 'eil51', 'berlin52', 'brazil58', 'st70', 'pr76',
@@ -25,7 +26,7 @@ Dir.glob(File.join(instdir, '*.tsp')) do |instance|
   next unless instances.any?{|allowed| instance.include? allowed}
 
   inst_name = File.basename(instance, File.extname(instance))
-  out_file = "#{enum_k}-#{inst_name}.csv"
+  out_file = "#{enum_k}-#{proximity_n}-#{inst_name}.csv"
 
   script = <<~EOF
   #!/bin/bash
@@ -35,11 +36,11 @@ Dir.glob(File.join(instdir, '*.tsp')) do |instance|
   #SBATCH --ntasks-per-node=1
   #SBATCH --cpus-per-task=1
   #SBATCH --mem-per-cpu=4096
-  #SBATCH -o #{enum_k}-#{inst_name}.txt
-  #SBATCH -e err-#{enum_k}-#{inst_name}.txt
+  #SBATCH -o #{enum_k}-#{proximity_n}-#{inst_name}.txt
+  #SBATCH -e err-#{enum_k}-#{proximity_n}-#{inst_name}.txt
 
-  PATH=#{binfdir} LD_LIBRARY_PATH=#{libsdir} #{File.join(execdir, 'tsp_bc')} #{instance} #{enum_k} #{out_file}
+  PATH=#{binfdir} LD_LIBRARY_PATH=#{libsdir} #{File.join(execdir, 'tsp_bc')} #{instance} #{enum_k} #{proximity_n} #{out_file}
   EOF
 
-  File.write(File.join('cluster-scripts', "launch-#{enum_k}-#{inst_name}.sh"), script)
+  File.write(File.join('cluster-scripts', "launch-#{enum_k}-#{proximity_n}-#{inst_name}.sh"), script)
 end
