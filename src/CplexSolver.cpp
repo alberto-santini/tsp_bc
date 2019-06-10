@@ -98,7 +98,9 @@ namespace tsp_bc {
         expr.end();
 
         if(k > 2u) {
-            add_subtour_enumeration(env, model, x);
+            for(auto sz = 3u; sz < k; ++sz) {
+                add_subtour_enumeration(env, model, x, sz);
+            }
         }
 
         const auto model_creation_end_time = high_resolution_clock::now();
@@ -173,10 +175,10 @@ namespace tsp_bc {
         };
     }
 
-    void CplexSolver::add_subtour_enumeration(IloEnv& env, IloModel& model, IloArray<IloNumVarArray>& x) const {
+    void CplexSolver::add_subtour_enumeration(IloEnv& env, IloModel& model, IloArray<IloNumVarArray>& x, std::size_t sz) const {
         const auto n = this->instance.number_of_vertices();
 
-        auto add_cut = [this, &env, &model, &x, n] (const std::vector<bool>& indicator) -> void {
+        auto add_cut = [this, &env, &model, &x, n, sz] (const std::vector<bool>& indicator) -> void {
             if(use_proximity && !is_indicator_proximal(indicator)) {
                 return;
             }
@@ -194,7 +196,7 @@ namespace tsp_bc {
             }
 
             try {
-                model.add(expr <= static_cast<IloInt>(k) - 1);
+                model.add(expr <= static_cast<IloInt>(sz) - 1);
             } catch(const IloException& e) {
                 std::cerr << "Cplex exception when adding cut lhs " << expr << "\n";
                 std::cerr << "Exception: " << e << "\n";
@@ -204,7 +206,7 @@ namespace tsp_bc {
         };
 
         auto indicator = std::vector<bool>(n, false);
-        visit_fixed_size_subsets(n, k, 0u, 0u, indicator, add_cut);
+        visit_fixed_size_subsets(n, sz, 0u, 0u, indicator, add_cut);
     }
 
     void CplexSolver::add_initial_solution(IloEnv& env, IloCplex& cplex, IloArray<IloNumVarArray>& x) const {

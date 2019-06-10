@@ -50,9 +50,9 @@ namespace tsp_bc {
         std::vector<std::vector<bool>> proximity;
         const std::size_t proximity_n;
 
-        // Enumerates and adds subtour elimination constraints for subsets of size k.
+        // Enumerates and adds subtour elimination constraints for subsets of size sz.
         // If use_proximity == false, it adds all such cuts; otherwise, it only adds cuts for proximal vertices.
-        void add_subtour_enumeration(IloEnv& env, IloModel& model, IloArray<IloNumVarArray>& x) const;
+        void add_subtour_enumeration(IloEnv& env, IloModel& model, IloArray<IloNumVarArray>& x, std::size_t sz) const;
 
         // Initialises the model with a greedy feasible solution.
         void add_initial_solution(IloEnv& env, IloCplex& cplex, IloArray<IloNumVarArray>& x) const;
