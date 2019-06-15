@@ -9,23 +9,14 @@ libsdir = "#{File.join(homedir, 'local', 'lib')}:#{File.join(homedir, 'local', '
 enum_k = ARGV[0].to_i
 proximity_n = ARGV[1].to_i
 
-instances = ['gr17', 'gr21', 'gr24', 'fri26', 'bayg29', 'dantzig42', 'att48',
-  'hk48', 'gr48', 'eil51', 'berlin52', 'brazil58', 'st70', 'pr76',
-  'eil76', 'rat99', 'kroE100', 'kroD100', 'kroC100', 'kroB100',
-  'kroA100', 'rd100', 'eil101', 'lin105', 'pr107', 'gr120', 'pr124',
-  'bier127', 'ch130', 'pr136', 'pr144', 'kroB150', 'ch150',
-  'kroA150', 'pr152', 'u159', 'brg180', 'rat195', 'd198', 'kroA200',
-  'kroB200', 'ts225', 'tsp225', 'pr226', 'gil262', 'pr264', 'a280',
-  'lin318', 'rd400', 'p654']
-
 FileUtils.mkdir_p('cluster-scripts')
 
 puts "Generating launchers for instance in #{instdir}..."
 
 Dir.glob(File.join(instdir, '*.tsp')) do |instance|
-  next unless instances.any?{|allowed| instance.include? allowed}
-
   inst_name = File.basename(instance, File.extname(instance))
+  inst_size = inst_name.gsub(/\D/, '').to_i
+  memory = (inst_size < 1000 ? 4096 : 8192)
   out_file = "#{enum_k}-#{proximity_n}-#{inst_name}.csv"
 
   script = <<~EOF
@@ -35,7 +26,7 @@ Dir.glob(File.join(instdir, '*.tsp')) do |instance|
   #SBATCH --nodes=1
   #SBATCH --ntasks-per-node=1
   #SBATCH --cpus-per-task=1
-  #SBATCH --mem-per-cpu=4096
+  #SBATCH --mem-per-cpu=#{memory}
   #SBATCH -o #{enum_k}-#{proximity_n}-#{inst_name}.txt
   #SBATCH -e err-#{enum_k}-#{proximity_n}-#{inst_name}.txt
 
