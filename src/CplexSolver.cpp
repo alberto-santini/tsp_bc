@@ -98,7 +98,7 @@ namespace tsp_bc {
         expr.end();
 
         if(k > 2u) {
-            for(auto sz = 3u; sz < k; ++sz) {
+            for(auto sz = 3u; sz <= k; ++sz) {
                 add_subtour_enumeration(env, model, x, sz);
             }
         }
