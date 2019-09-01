@@ -36,7 +36,7 @@ namespace tsp_bc {
         SPGraph sp_graph;
         std::vector<SPEdge> reverse;
 
-        explicit SELazyConstraint(const IloEnv& env, const IloArray<IloNumVarArray>& x, const Graph& graph);
+        SELazyConstraint(const IloEnv& env, const IloArray<IloNumVarArray>& x, const Graph& graph);
 
         IloCplex::CallbackI* duplicateCallback() const override {
             return new(getEnv()) SELazyConstraint{*this};
