@@ -50,6 +50,11 @@ namespace tsp_bc {
         std::vector<std::vector<bool>> proximity;
         const std::size_t proximity_n;
 
+        // If true, adding cutting planes for integer solutions only, isolating
+        // only the subtour passing by vertex 0. If false, separate cutting planes
+        // for fractional solutions too.
+        const bool int_cp_only;
+
         // Enumerates and adds subtour elimination constraints for subsets of size sz.
         // If use_proximity == false, it adds all such cuts; otherwise, it only adds cuts for proximal vertices.
         void add_subtour_enumeration(IloEnv& env, IloModel& model, IloArray<IloNumVarArray>& x, std::size_t sz) const;
@@ -64,7 +69,7 @@ namespace tsp_bc {
         // other vertex in the indicator set, which is proximal to i.
         bool is_indicator_proximal(const std::vector<bool>& indicator) const;
 
-        CplexSolver(std::string instance_file, std::size_t k, bool use_proximity, std::size_t proximity_n);
+        CplexSolver(std::string instance_file, std::size_t k, bool use_proximity, std::size_t proximity_n, bool int_cp_only);
 
         friend class CplexSolverFactory;
 
@@ -75,8 +80,9 @@ namespace tsp_bc {
     class CplexSolverFactory {
         std::string instance_file = "";
         std::size_t k = 0u;
-        bool use_proximity = false;
         std::size_t proximity_n = 5u;
+        bool use_proximity = false;
+        bool int_cp_only = false;
 
     public:
 
@@ -102,13 +108,18 @@ namespace tsp_bc {
             return *this;
         }
 
+        CplexSolverFactory& with_int_cp_only(bool int_cp_only_ = true) {
+            this->int_cp_only = int_cp_only_;
+            return *this;
+        }
+
         CplexSolver get() const {
             if(instance_file.empty()) {
                 std::cerr << "You need to pass an instance file!\n";
                 throw std::logic_error{"No instance file, needed to create a solver."};
             }
 
-            return CplexSolver{instance_file, k, use_proximity, proximity_n};
+            return CplexSolver{instance_file, k, use_proximity, proximity_n, int_cp_only};
         }
     };
 }

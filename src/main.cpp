@@ -26,7 +26,7 @@ int main(int, char** argv) {
         return 1;
     }
 
-    // --- 4th parameter: proximity n ---
+    // --- 3rd parameter: proximity n ---
     ss.str(""); ss.clear();
     ss << argv[3];
 
@@ -37,8 +37,17 @@ int main(int, char** argv) {
     }
     const auto use_proximity = (proximity_n > 0u);
 
-    // --- 5th parameter: output file ---
+    // --- 4th parameter: output file ---
     auto ofs = std::ofstream{argv[4]};
+
+    // --- 5th parameter: using integer-only cutting planes? ---
+    ss.str(""); ss.clear();
+    ss << argv[5];
+
+    bool int_cp_only = false;
+    if(ss.str() == "i") {
+        int_cp_only = true;
+    }
 
     // --- Solve! ---
     const auto solver = CplexSolverFactory{}
@@ -46,6 +55,7 @@ int main(int, char** argv) {
         .with_proximity(use_proximity)
         .with_proximity_n(proximity_n)
         .with_enumeration_k(subtour_enumeration_k)
+        .with_int_cp_only(int_cp_only)
         .get();
 
     const auto solution = solver.solve();

@@ -7,6 +7,8 @@ add_executable(tsp_bc   src/main.cpp
                         src/CplexSolver.h
                         src/SELazyConstraint.cpp
                         src/SELazyConstraint.h
+                        src/SEIntegerLazyConstraint.h
+                        src/SEIntegerLazyConstraint.cpp
                         src/SEUserCut.cpp
                         src/SEUserCut.h
                         src/Graph.h

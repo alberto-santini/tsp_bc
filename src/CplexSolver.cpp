@@ -5,6 +5,7 @@
 #include "CplexSolver.h"
 #include "SEUserCut.h"
 #include "SELazyConstraint.h"
+#include "SEIntegerLazyConstraint.h"
 
 #include <cassert>
 #include <iostream>
@@ -31,8 +32,8 @@ namespace tsp_bc {
         }
     }
 
-    CplexSolver::CplexSolver(std::string instance_file, std::size_t k, bool use_proximity, std::size_t proximity_n) :
-        instance{instance_file}, k{k}, use_proximity{use_proximity}, proximity_n{proximity_n}
+    CplexSolver::CplexSolver(std::string instance_file, std::size_t k, bool use_proximity, std::size_t proximity_n, bool int_cp_only) :
+        instance{instance_file}, k{k}, use_proximity{use_proximity}, proximity_n{proximity_n}, int_cp_only{int_cp_only}
     {
         graph = Graph(instance.number_of_vertices());
 
@@ -107,8 +108,16 @@ namespace tsp_bc {
         const auto model_creation_time = duration_cast<duration<double>>(model_creation_end_time - start_time).count();
 
         IloCplex cplex{model};
-        cplex.use(IloCplex::Callback(new(env) SEUserCut{env, x, graph}));
-        cplex.use(IloCplex::Callback(new(env) SELazyConstraint{env, x, graph}));
+
+        if(int_cp_only) {
+            std::cout << "Separating subtour elimination inequalities for integer solutions only.\n";
+            cplex.use(IloCplex::Callback(new(env) SEIntegerLazyConstraint{env, x}));
+        } else {
+            std::cout << "Separating subtour elimination inequalities for integer and fractional solutions.\n";
+            cplex.use(IloCplex::Callback(new(env) SEUserCut{env, x, graph}));
+            cplex.use(IloCplex::Callback(new(env) SELazyConstraint{env, x, graph}));
+        }
+
         cplex.setParam(IloCplex::TiLim, 3600 - model_creation_time);
         cplex.setParam(IloCplex::NodeLim, 0);
 
